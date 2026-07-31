@@ -128,16 +128,14 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);bo
 
 @media(max-width:600px){ .gbody{grid-template-columns:1fr;} }
 
-/* print — institutional letterhead */
+/* print — institutional letterhead as full-page background (folio 8.5 x 13 in) */
 #printArea{display:none;}
 @media print{
   body>*:not(#printArea){display:none!important;}
   #printArea{display:block!important;}
-  @page{size:216mm 330mm;margin:34mm 20mm 26mm;}
-  #pHeader{position:fixed;top:-26mm;left:0;right:0;text-align:center;}
-  #pHeader img{height:22mm;object-fit:contain;}
-  #pFooter{position:fixed;bottom:-20mm;left:0;right:0;text-align:center;}
-  #pFooter img{width:100%;max-height:9mm;object-fit:contain;}
+  @page{size:8.5in 13in;margin:2.5in 0.85in 0.95in;}
+  #pBg{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;margin:0;padding:0;}
+  #pBg img{width:100vw;height:100vh;display:block;}
   #pBody{font-family:"Times New Roman",serif;font-size:12pt;line-height:1.5;color:#000;text-align:justify;}
   #pBody .ln{white-space:pre-wrap;}
   #pBody .al-right{text-align:right;}
@@ -207,11 +205,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);bo
 </div>
 
 <div id="printArea">
-  <div id="pHeader"><img src="template/Pictures/10000001000006AD000005D03E0EE38F.png" alt="" /></div>
-  <div id="pFooter"><img src="template/Pictures/10000000000008000000005A7D85DF8C.jpg" alt="" /></div>
+  <div id="pBg"><img src="membrete.png" alt="" /></div>
   <div id="pBody"></div>
 </div>
 
+<script src="template-data.js"></script>
 <script>
 "use strict";
 const $ = (id) => document.getElementById(id);
@@ -704,30 +702,20 @@ function injectAfter(xml, anchor, text) {
   const paras = text.split("\n").map((l) => "<text:p>" + xescT(l) + "</text:p>").join("");
   return xml.slice(0, pos) + paras + xml.slice(pos);
 }
-async function downloadOdt() {
+function b64ToBytes(b64) { const bin = atob(b64), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; }
+function downloadOdt() {
   toast("Generando .odt…");
   try {
-    const base = "template/";
-    let content = await (await fetch(base + "content.xml")).text();
+    if (!window.TEMPLATE_PARTS || !window.TEMPLATE_ORDER) { toast("Falta el archivo template-data.js"); return; }
+    let content = new TextDecoder("utf-8").decode(b64ToBytes(TEMPLATE_PARTS["content.xml"]));
     for (const g of GROUPS) for (const f of g.fields) {
       const k = f[0]; if (k === "FRASEIDIOMA") continue;
       content = fillField(content, APP2TPL[k] || k, v(k) || "");
     }
     for (const n of NARR) content = injectAfter(content, ODT_ANCHORS[n[0]], narr[n[0]] || "");
     const enc = new TextEncoder();
-    const bin = async (p) => new Uint8Array(await (await fetch(base + p)).arrayBuffer());
-    const entries = [
-      { name: "mimetype", data: await bin("mimetype") },
-      { name: "content.xml", data: enc.encode(content) },
-      { name: "styles.xml", data: await bin("styles.xml") },
-      { name: "settings.xml", data: await bin("settings.xml") },
-      { name: "meta.xml", data: await bin("meta.xml") },
-      { name: "manifest.rdf", data: await bin("manifest.rdf") },
-      { name: "META-INF/manifest.xml", data: await bin("META-INF/manifest.xml") },
-      { name: "Thumbnails/thumbnail.png", data: await bin("thumbnail.png") },
-      { name: "Pictures/10000000000008000000005A7D85DF8C.jpg", data: await bin("Pictures/10000000000008000000005A7D85DF8C.jpg") },
-      { name: "Pictures/10000001000006AD000005D03E0EE38F.png", data: await bin("Pictures/10000001000006AD000005D03E0EE38F.png") },
-    ];
+    const entries = window.TEMPLATE_ORDER.map((name) =>
+      name === "content.xml" ? { name, data: enc.encode(content) } : { name, data: b64ToBytes(TEMPLATE_PARTS[name]) });
     const zip = buildZip(entries);
     const nom = (v("NOMBREDELAVICTIMA") || "informe").replace(/[^\w\sÁÉÍÓÚÑáéíóúñ-]/g, "").trim().replace(/\s+/g, "_") || "informe";
     const blob = new Blob([zip], { type: "application/vnd.oasis.opendocument.text" });
@@ -736,7 +724,7 @@ async function downloadOdt() {
     setTimeout(() => URL.revokeObjectURL(url), 4000);
     toast(".odt descargado");
   } catch (e) {
-    toast("El .odt requiere la app publicada en línea (GitHub Pages).");
+    toast("No se pudo generar el .odt.");
   }
 }
 
