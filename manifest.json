@@ -1,0 +1,17 @@
+{
+  "name": "Generador de Informes — Adulto",
+  "short_name": "Informes",
+  "description": "Captura de informe psicológico con objetivo de atención (adulto): campos que se repiten, copiar por sección para AYUDA.gt, documentos y borradores. Todo en el dispositivo.",
+  "lang": "es-GT",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eceef1",
+  "theme_color": "#181c22",
+  "icons": [
+    { "src": "gen-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "gen-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "gen-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

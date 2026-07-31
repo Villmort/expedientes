@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#181c22" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="gen-192.png" />
+<title>Generador de Informes — Adulto</title>
+<style>
+:root{
+  --graphite:#181c22; --panel:#ffffff; --bg:#eceef1; --ink:#1a2028; --ink-soft:#5b6472;
+  --line:#d6dbe2; --teal:#217a70; --teal-dark:#185b53; --teal-soft:#e4f0ee;
+  --amber:#b57e1f; --danger:#a33a2f; --danger-soft:#f6e7e4; --ok:#1f6b46;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));}
+.wrap{max-width:920px;margin:0 auto;padding:0 14px;}
+
+header.top{background:var(--graphite);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 0 13px;}
+header.top .wrap{display:flex;align-items:center;gap:12px;}
+.brand{flex:1;}
+.brand h1{font-size:16px;font-weight:600;letter-spacing:-.01em;}
+.brand p{font-size:11.5px;opacity:.72;margin-top:2px;}
+.draftbtn{background:rgba(255,255,255,.12);color:#fff;border:none;border-radius:7px;
+  padding:8px 12px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;gap:6px;align-items:center;}
+
+/* tabs */
+.tabs{position:sticky;top:0;z-index:20;background:var(--bg);display:flex;gap:6px;padding:12px 14px 10px;
+  max-width:920px;margin:0 auto;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:#fff;color:var(--ink-soft);border-radius:20px;
+  padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--sans);}
+.tab.on{background:var(--teal);color:#fff;border-color:var(--teal);}
+
+.view{display:none;}
+.view.on{display:block;}
+
+/* groups & fields */
+.group{background:var(--panel);border:1px solid var(--line);border-radius:11px;margin-bottom:14px;overflow:hidden;}
+.ghead{display:flex;align-items:center;gap:10px;padding:13px 15px;background:#f6f8fa;border-bottom:1px solid var(--line);}
+.ghead h2{flex:1;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--teal-dark);}
+.gbody{padding:14px 15px;display:grid;grid-template-columns:1fr 1fr;gap:12px 13px;}
+.f{display:flex;flex-direction:column;}
+.f.full{grid-column:1/-1;}
+.f label{font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;
+  margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+.f .badge{font-family:var(--mono);font-size:9.5px;color:#fff;background:var(--teal);border-radius:9px;
+  padding:1px 6px;font-weight:700;letter-spacing:0;text-transform:none;}
+.inwrap{position:relative;display:flex;}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 40px 10px 11px;
+  font-size:14px;font-family:var(--sans);color:var(--ink);background:#fff;}
+select{padding-right:11px;} textarea{padding:10px 11px;resize:vertical;min-height:74px;line-height:1.5;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(33,122,112,.13);}
+.cpF{position:absolute;right:5px;top:50%;transform:translateY(-50%);border:none;background:transparent;
+  color:var(--ink-soft);cursor:pointer;padding:6px;border-radius:6px;line-height:0;}
+.cpF:active{background:var(--teal-soft);color:var(--teal-dark);}
+.datebtn{font-size:10.5px;font-weight:600;color:var(--teal-dark);background:var(--teal-soft);border:none;
+  border-radius:6px;padding:3px 8px;cursor:pointer;margin-left:auto;}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;
+  border-radius:8px;padding:11px 15px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:var(--sans);}
+.btn:active{filter:brightness(.94);}
+.btn.pri{background:var(--teal);color:#fff;}
+.btn.line{background:#fff;border-color:var(--line);color:var(--ink);}
+.btn.sm{padding:7px 11px;font-size:12px;border-radius:7px;}
+.cpG{background:var(--teal-soft);color:var(--teal-dark);border:none;border-radius:7px;padding:7px 11px;
+  font-size:12px;font-weight:700;cursor:pointer;display:flex;gap:5px;align-items:center;}
+.cpG:active{background:var(--teal);color:#fff;}
+
+/* narrative */
+.narr{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px 15px;margin-bottom:12px;}
+.narr .nh{display:flex;align-items:center;gap:10px;margin-bottom:9px;}
+.narr .nh h3{flex:1;font-size:13.5px;font-weight:700;color:var(--ink);}
+.narr .guide{font-size:11.5px;color:var(--ink-soft);line-height:1.45;margin-bottom:9px;
+  background:#f6f8fa;border-left:3px solid var(--teal);border-radius:0 6px 6px 0;padding:8px 10px;}
+
+/* acciones */
+.acc{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:6px 4px;margin-bottom:12px;}
+.acc-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-bottom:1px solid #eef1f4;}
+.acc-item:last-child{border-bottom:none;}
+.acc-item input{width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:var(--teal);padding:0;}
+.acc-item span{font-size:13px;line-height:1.4;}
+.acc-item .num{font-family:var(--mono);font-size:11px;color:var(--ink-soft);flex:0 0 26px;margin-top:2px;}
+.acc-total{position:sticky;bottom:0;background:var(--teal-soft);border-top:1px solid var(--line);
+  padding:11px 14px;font-size:13px;font-weight:700;color:var(--teal-dark);display:flex;justify-content:space-between;align-items:center;}
+
+/* documentos */
+.doc{background:var(--panel);border:1px solid var(--line);border-radius:11px;margin-bottom:13px;overflow:hidden;}
+.doc .dh{display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;}
+.doc .dh h3{flex:1;font-size:14px;font-weight:700;}
+.doc .dh .chev{color:var(--ink-soft);transition:transform .2s;}
+.doc.open .dh .chev{transform:rotate(90deg);}
+.doc .preview{display:none;border-top:1px solid var(--line);}
+.doc.open .preview{display:block;}
+.doc .ptext{white-space:pre-wrap;font-size:12.5px;line-height:1.6;color:var(--ink);padding:14px 15px;
+  max-height:340px;overflow-y:auto;background:#fbfcfd;font-family:var(--sans);}
+.doc .ph{color:var(--danger);background:#fbece7;border-radius:3px;padding:0 3px;}
+.doc .dactions{display:flex;gap:9px;padding:12px 15px;border-top:1px solid var(--line);flex-wrap:wrap;}
+
+.hint{font-size:12px;color:var(--ink-soft);line-height:1.5;margin:2px 4px 14px;}
+.savebar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);
+  padding:11px 14px calc(11px + env(safe-area-inset-bottom));display:flex;gap:9px;z-index:30;}
+.savebar .wrap2{max-width:920px;margin:0 auto;display:flex;gap:9px;width:100%;}
+.savebar .btn{flex:1;}
+
+/* drafts modal */
+.modal{position:fixed;inset:0;background:rgba(20,24,30,.55);display:none;align-items:flex-end;justify-content:center;z-index:90;}
+.modal.on{display:flex;}
+.sheet{background:#fff;width:100%;max-width:560px;border-radius:16px 16px 0 0;max-height:82vh;overflow-y:auto;
+  padding:18px 16px calc(20px + env(safe-area-inset-bottom));}
+.sheet h2{font-size:16px;margin-bottom:4px;}
+.sheet p.sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;}
+.draft{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:9px;padding:11px 12px;margin-bottom:9px;}
+.draft .di{flex:1;min-width:0;}
+.draft .dt{font-size:13.5px;font-weight:600;}
+.draft .dm{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:2px;}
+.draft button{border:none;background:transparent;padding:7px;border-radius:6px;cursor:pointer;color:var(--ink-soft);}
+.draft .load{color:var(--teal-dark);font-weight:700;font-size:12.5px;background:var(--teal-soft);padding:7px 11px;border-radius:7px;}
+.emptyd{text-align:center;color:var(--ink-soft);font-size:13px;padding:26px 10px;line-height:1.5;}
+
+.toast{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  background:var(--graphite);color:#fff;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:600;
+  z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:88vw;text-align:center;}
+
+@media(max-width:600px){ .gbody{grid-template-columns:1fr;} }
+
+/* print — institutional letterhead */
+#printArea{display:none;}
+@media print{
+  body>*:not(#printArea){display:none!important;}
+  #printArea{display:block!important;}
+  @page{size:216mm 330mm;margin:34mm 20mm 26mm;}
+  #pHeader{position:fixed;top:-26mm;left:0;right:0;text-align:center;}
+  #pHeader img{height:22mm;object-fit:contain;}
+  #pFooter{position:fixed;bottom:-20mm;left:0;right:0;text-align:center;}
+  #pFooter img{width:100%;max-height:9mm;object-fit:contain;}
+  #pBody{font-family:"Times New Roman",serif;font-size:12pt;line-height:1.5;color:#000;text-align:justify;}
+  #pBody .ln{white-space:pre-wrap;}
+  #pBody .al-right{text-align:right;}
+  #pBody .al-center{text-align:center;}
+  #pBody .al-left{text-align:left;}
+  #pBody .al-title{text-align:center;font-weight:bold;}
+  #pBody .sp{height:8pt;}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Generador de Informes</h1>
+      <p>Adulto · Informe psicológico con objetivo de atención</p>
+    </div>
+    <button class="draftbtn" id="draftsBtn">☰ Borradores</button>
+  </div>
+</header>
+
+<div class="tabs" id="tabs">
+  <button class="tab on" data-v="captura">Datos</button>
+  <button class="tab" data-v="narrativa">Narrativa</button>
+  <button class="tab" data-v="acciones">Acciones</button>
+  <button class="tab" data-v="documentos">Documentos</button>
+</div>
+
+<div class="wrap">
+  <div class="view on" id="v-captura">
+    <p class="hint">Escribe cada dato una sola vez: se repite en todo el informe. El botón de copiar de cada campo o de cada bloque te sirve para pegar directo en AYUDA.gt.</p>
+    <div id="groups"></div>
+  </div>
+
+  <div class="view" id="v-narrativa">
+    <p class="hint">Redacta las secciones del informe. Cada una tiene su botón para copiar y pegar en el sistema.</p>
+    <div id="narrs"></div>
+  </div>
+
+  <div class="view" id="v-acciones">
+    <p class="hint">Marca las acciones victimológicas realizadas. El total y el listado se copian para el oficio.</p>
+    <div class="acc" id="accList"></div>
+    <button class="btn pri" style="width:100%" id="copyAcc">Copiar acciones realizadas</button>
+  </div>
+
+  <div class="view" id="v-documentos">
+    <p class="hint">Documentos armados con los datos actuales. Abre cada uno para copiar el texto completo o imprimirlo (hoja oficio, con membrete y línea azul) para firma.</p>
+    <button class="btn pri" style="width:100%;margin-bottom:13px" id="odtBtn">⤓ Descargar .odt para archivar (formato idéntico)</button>
+    <div id="docs"></div>
+  </div>
+</div>
+
+<div class="savebar">
+  <div class="wrap2">
+    <button class="btn line" id="newBtn">Nuevo</button>
+    <button class="btn pri" id="saveBtn">Guardar borrador</button>
+  </div>
+</div>
+
+<div class="modal" id="draftsModal">
+  <div class="sheet">
+    <h2>Borradores</h2>
+    <p class="sub">Guardados en esta tableta. Toca uno para continuarlo.</p>
+    <div id="draftList"></div>
+    <button class="btn line" style="width:100%;margin-top:6px" id="closeDrafts">Cerrar</button>
+  </div>
+</div>
+
+<div id="printArea">
+  <div id="pHeader"><img src="template/Pictures/10000001000006AD000005D03E0EE38F.png" alt="" /></div>
+  <div id="pFooter"><img src="template/Pictures/10000000000008000000005A7D85DF8C.jpg" alt="" /></div>
+  <div id="pBody"></div>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+
+/* ===== field schema (grouped) ===== */
+const GROUPS = [
+  { title: "Expediente", fields: [
+    ["NUMERODEMP", "No. de MP / Expediente", "text", ""],
+    ["FECHARECIBIDO", "Fecha de solicitud", "date", ""],
+    ["Fecha", "Fecha de atención", "date", ""],
+    ["Hora", "Hora de atención", "time", ""],
+    ["NOMBREDELFISCAL", "Fiscal responsable", "text", "Lic. "],
+    ["FISCALIA", "Fiscalía / agencia", "text", "Agencia Fiscal de la Mujer"],
+    ["DELITO", "Delito", "text", ""],
+    ["NR", "Nivel de riesgo", "text", ""],
+    ["LUGARDEATENCION", "Lugar de atención", "text", "Oficina de Atención a la Víctima de Totonicapán"],
+    ["FECHADEREM", "Fecha de remisión del informe", "date", ""],
+  ]},
+  { title: "Datos generales / AYUDA.gt", fields: [
+    ["NOMBREDELAVICTIMA", "Nombre completo de la víctima", "text", ""],
+    ["NOMBRECOMUN", "Nombre común / preferido", "text", ""],
+    ["NACIMIENTO", "Fecha de nacimiento", "date", ""],
+    ["EDAD", "Edad", "text", ""],
+    ["SEXO", "Sexo", "select", "Mujer", ["Mujer", "Hombre"]],
+    ["DPI", "Documento de identificación", "text", "DPI extendido por el Registro Nacional de Personas"],
+    ["CUI", "Número de identificación (CUI)", "text", ""],
+    ["NACIONALIDAD", "Nacionalidad", "text", "Guatemalteca"],
+    ["Pueblo", "Pueblo", "text", "Maya"],
+    ["COMUNIDAD", "Comunidad lingüística", "text", "K'iche'"],
+    ["Idiomas", "Idiomas que habla", "text", "Español K'iche'"],
+    ["IDIOMAPREFERIDO", "Idioma preferido", "text", "Español"],
+    ["EMBARAZADA", "Embarazada", "select", "No", ["No", "Sí", "No aplica"]],
+    ["Discapacidad", "Discapacidad", "text", "Ninguna"],
+    ["ESTADOCIVIL", "Estado civil", "text", "Soltera"],
+    ["RELIGION", "Religión", "text", ""],
+    ["ESCOLARIDAD", "Nivel escolar", "text", ""],
+    ["LABORAL", "Profesión u oficio", "text", ""],
+    ["DIRECCION", "Dirección", "text", ""],
+    ["TELEFONO", "Teléfono", "text", "+502 "],
+    ["Propietario", "Propietario del teléfono", "text", "Propietario"],
+    ["Relacion", "Relación (del teléfono)", "text", "Propio"],
+  ]},
+  { title: "Sindicado", fields: [
+    ["Sindicado", "Sindicado", "text", "Sindicado"],
+    ["Relacionconelsindicado", "Relación con el sindicado", "text", ""],
+  ]},
+  { title: "Consentimientos", fields: [
+    ["ATENCION", "Autoriza atención", "select", "Sí", ["Sí", "No"]],
+    ["INFORME", "Autoriza informe", "select", "Sí", ["Sí", "No"]],
+    ["Consentimiento", "Consentimiento otorgado por", "text", "la víctima"],
+    ["CONSENTIMIENTOCUI", "CUI del consentimiento", "text", ""],
+    ["Psicologo", "Psicólogo responsable", "text", "José David Villagrán Monterroso"],
+    ["FRASEIDIOMA", "Frase de idioma / intérprete", "text", "La entrevista se realizó en idioma español y no necesitó intérprete."],
+  ]},
+];
+
+/* ===== narrative sections ===== */
+const NARR = [
+  ["hechos", "Hechos referidos (relato)", "Relato tal como la persona lo expresó. Al final, una síntesis en tus palabras que ordene los aspectos más relevantes cuando la información sea abundante."],
+  ["obs_fisico", "Observación clínica — Aspecto físico", "Sexo y género, edad aparente vs. indicada, vestimenta, limpieza, adornos, marcas o tatuajes, postura, gestos, expresiones faciales."],
+  ["obs_mental", "Observación clínica — Capacidades mentales", ""],
+  ["obs_conducta", "Observación clínica — Conductual", ""],
+  ["obs_emocion", "Observación clínica — Emociones prevalentes", ""],
+  ["obs_impresion", "Observación clínica — Impresión de su situación psicológica", ""],
+  ["dinamica", "Valoración de la dinámica de victimización", "Enumerar los apartados según los criterios del Protocolo de informes psicológicos del MP."],
+  ["afectacion", "Afectación psicológica y permanencia de la afectación", ""],
+  ["proyecto", "Afectación al proyecto de vida o deterioro psicosocial", ""],
+  ["riesgo", "Valoración de la vulnerabilidad y riesgo", ""],
+  ["recomendaciones", "Recomendaciones", "Si procede evaluación por INACIF, indica los aspectos identificados durante la atención que conviene evaluar y que no pudiste abordar por la metodología."],
+  ["bibliografia", "Bibliografía", ""],
+];
+
+/* ===== acciones victimológicas (36) ===== */
+const ACCIONES = [
+  "AC a diligencia de investigación", "AC a instituciones", "AC a junta conciliatoria",
+  "AC a prueba anticipada (Cámara Gesell o reconocimiento de persona)", "AC durante diligencias en fiscalía",
+  "AC durante el debate", "AC durante la presentación de la denuncia", "AC durante la reconstrucción de los hechos",
+  "AC para presentación de la declaración testimonial", "Ampliación de informes", "Apoyo en crisis",
+  "Asesoría técnica", "Atención en casos de Hospital", "Carátula de Acciones Victimológicas",
+  "Consultoría técnica", "Coordinación interinstitucional", "Diligencia no aceptada / oficio de no aceptación",
+  "Entrega de constancias a víctimas", "Entrega de ropa a la víctima por distintas razones", "Entrevista",
+  "Entrevista en circuito cerrado como anticipo de prueba", "Finalización de atención en las redes de derivación",
+  "Fortalecimiento a víctimas directas y colaterales", "Fortalecimiento a víctimas-testigos",
+  "Informe psicológico con objetivo de atención", "Llamada telefónica", "Orientación psicológica",
+  "Participación en debate como testigo o perito", "Preparación de la víctima para audiencia y/o debate",
+  "Preparación de la víctima previo a entrevista en Cámara Gesell o circuito cerrado", "Primera consulta",
+  "Reconsulta", "Referencia institucional a la red local de derivación",
+  "Seguimiento de atención para personas víctimas en redes de derivación local", "Visita domiciliar",
+  "Visita institucional",
+];
+
+/* ===== state ===== */
+let vals = {};        // field key -> value
+let narr = {};        // narrative key -> text
+let accSel = {};      // action index -> bool
+let currentId = null;
+
+function defaults() {
+  vals = {}; narr = {}; accSel = {};
+  GROUPS.forEach((g) => g.fields.forEach((f) => vals[f[0]] = f[3] || ""));
+  NARR.forEach((n) => narr[n[0]] = "");
+}
+
+/* ===== dates & age ===== */
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const DATEKEYS = new Set(["NACIMIENTO", "Fecha", "FECHARECIBIDO", "FECHADEREM"]);
+function todayISO() { const d = new Date(), p = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+function formatLong(iso) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || "").trim()); return m ? `${+m[3]} de ${MESES[+m[2]-1]} de ${m[1]}` : (iso || ""); }
+function recalcAge() {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((vals.NACIMIENTO || "").trim());
+  if (!m) return;
+  const b = new Date(+m[1], +m[2]-1, +m[3]), n = new Date();
+  let a = n.getFullYear() - b.getFullYear();
+  if (n.getMonth() < b.getMonth() || (n.getMonth() === b.getMonth() && n.getDate() < b.getDate())) a--;
+  if (a < 0 || a > 120) return;
+  vals.EDAD = a + " años";
+  const inp = document.querySelector('[data-fk="EDAD"]'); if (inp) inp.value = vals.EDAD;
+}
+
+/* ===== merge ===== */
+function v(k) { let x = (vals[k] || "").trim(); if (DATEKEYS.has(k)) x = formatLong(x); return x; }
+function merge(str) {
+  return str.replace(/\{(\w+)\}/g, (_, k) => v(k) || `[${k}]`);
+}
+
+/* ===== toast + copy ===== */
+let toastT;
+function toast(m) {
+  clearTimeout(toastT);
+  let t = $("toastEl");
+  if (!t) { t = document.createElement("div"); t.className = "toast"; t.id = "toastEl"; document.body.appendChild(t); }
+  t.textContent = m; toastT = setTimeout(() => t.remove(), 2200);
+}
+async function copy(text, label) {
+  const clean = text.replace(/\[[A-Za-z_]+\]/g, "______");
+  try {
+    if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(clean);
+    else throw 0;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = clean; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch {}
+    ta.remove();
+  }
+  toast((label || "Texto") + " copiado");
+}
+const ICON_COPY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+
+/* ===== render: captura ===== */
+function longDate() {
+  const meses = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  const d = new Date();
+  return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+}
+function renderGroups() {
+  $("groups").innerHTML = GROUPS.map((g, gi) => `
+    <div class="group">
+      <div class="ghead">
+        <h2>${g.title}</h2>
+        <button class="cpG" data-g="${gi}">${ICON_COPY} Copiar bloque</button>
+      </div>
+      <div class="gbody">
+        ${g.fields.map((f) => fieldHTML(f)).join("")}
+      </div>
+    </div>`).join("");
+
+  $("groups").querySelectorAll("[data-fk]").forEach((el) => {
+    el.addEventListener("input", (e) => {
+      vals[el.dataset.fk] = e.target.value;
+      if (el.dataset.fk === "NACIMIENTO") recalcAge();
+    });
+  });
+  $("groups").querySelectorAll(".cpF").forEach((b) => b.onclick = () => {
+    const k = b.dataset.k; copy(v(k) || "", labelOf(k));
+  });
+  $("groups").querySelectorAll(".datebtn").forEach((b) => b.onclick = () => {
+    const k = b.dataset.k; vals[k] = todayISO();
+    const inp = $("groups").querySelector(`[data-fk="${k}"]`); if (inp) inp.value = vals[k];
+    if (k === "NACIMIENTO") recalcAge();
+  });
+  $("groups").querySelectorAll(".cpG").forEach((b) => b.onclick = () => {
+    const g = GROUPS[+b.dataset.g];
+    const lines = g.fields.map((f) => `${f[1]}: ${v(f[0]) || "______"}`).join("\n");
+    copy(lines, g.title);
+  });
+}
+function labelOf(k) {
+  for (const g of GROUPS) for (const f of g.fields) if (f[0] === k) return f[1];
+  return k;
+}
+function fieldHTML(f) {
+  const [k, label, type, def, opts] = f;
+  const val = vals[k] != null ? vals[k] : (def || "");
+  const esc = (s) => String(s).replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  let control;
+  if (type === "select") {
+    control = `<select data-fk="${k}">${opts.map((o) => `<option${o === val ? " selected" : ""}>${o}</option>`).join("")}</select>`;
+  } else if (type === "textarea") {
+    control = `<textarea data-fk="${k}">${esc(val)}</textarea>`;
+  } else if (type === "date") {
+    control = `<input type="date" data-fk="${k}" value="${esc(val)}" />`
+      + `<button class="cpF" data-k="${k}" title="Copiar">${ICON_COPY}</button>`;
+  } else {
+    control = `<input type="text" data-fk="${k}" value="${esc(val)}" />`
+      + `<button class="cpF" data-k="${k}" title="Copiar">${ICON_COPY}</button>`;
+  }
+  const dateBtn = (type === "date") ? `<button class="datebtn" data-k="${k}">Hoy</button>` : "";
+  const cls = (type === "textarea") ? "f full" : "f";
+  return `<div class="${cls}"><label>${label} ${dateBtn}</label><div class="inwrap">${control}</div></div>`;
+}
+
+/* ===== render: narrativa ===== */
+function renderNarr() {
+  $("narrs").innerHTML = NARR.map((n) => `
+    <div class="narr">
+      <div class="nh">
+        <h3>${n[1]}</h3>
+        <button class="cpG" data-nk="${n[0]}">${ICON_COPY} Copiar</button>
+      </div>
+      ${n[2] ? `<div class="guide">${n[2]}</div>` : ""}
+      <textarea data-nk="${n[0]}" placeholder="Redacta aquí…">${(narr[n[0]] || "").replace(/</g, "&lt;")}</textarea>
+    </div>`).join("");
+  $("narrs").querySelectorAll("textarea").forEach((t) => t.addEventListener("input", () => narr[t.dataset.nk] = t.value));
+  $("narrs").querySelectorAll(".cpG").forEach((b) => b.onclick = () => {
+    const k = b.dataset.nk;
+    const title = NARR.find((n) => n[0] === k)[1];
+    copy(narr[k] || "", title);
+  });
+}
+
+/* ===== render: acciones ===== */
+function renderAcc() {
+  $("accList").innerHTML = ACCIONES.map((a, i) => `
+    <label class="acc-item">
+      <input type="checkbox" data-ai="${i}"${accSel[i] ? " checked" : ""} />
+      <span class="num">${String(i+1).padStart(2,"0")}</span>
+      <span>${a}</span>
+    </label>`).join("") + `<div class="acc-total"><span>Total de acciones realizadas</span><span id="accCount">0</span></div>`;
+  $("accList").querySelectorAll("input").forEach((c) => c.onchange = () => { accSel[c.dataset.ai] = c.checked; updateAccCount(); });
+  updateAccCount();
+}
+function updateAccCount() {
+  const n = Object.values(accSel).filter(Boolean).length;
+  const el = $("accCount"); if (el) el.textContent = n;
+}
+function accText() {
+  const done = ACCIONES.filter((_, i) => accSel[i]);
+  if (!done.length) return "Sin acciones marcadas.";
+  return done.map((a, i) => `${i+1}. ${a}`).join("\n") + `\n\nTotal: ${done.length}`;
+}
+
+/* ===== assembled documents ===== */
+function docInforme() {
+  return [
+    "FISCALÍA DE DISTRITO DE TOTONICAPÁN",
+    "OFICINA DE ATENCIÓN A LA VÍCTIMA",
+    merge("{NUMERODEMP}"),
+    merge("{FECHADEREM}"),
+    "",
+    "INFORME PSICOLÓGICO CON OBJETIVO DE ATENCIÓN",
+    merge("{NOMBREDELFISCAL}"),
+    "Auxiliar Fiscal I",
+    merge("{FISCALIA}"),
+    "MINISTERIO PÚBLICO",
+    "",
+    merge("Por este medio, me permito dar respuesta a su solicitud de {FECHARECIBIDO}, en la que solicita se elabore el Informe psicológico con objetivo de atención, de {NOMBREDELAVICTIMA} quien fue atendido el día {Fecha}."),
+    "",
+    "DATOS GENERALES",
+    merge("Nombre completo: {NOMBREDELAVICTIMA}"),
+    merge("Edad: {EDAD}"),
+    merge("Sexo: {SEXO}"),
+    merge("Fecha de nacimiento: {NACIMIENTO}"),
+    merge("Documento de identificación: {DPI}"),
+    merge("Número identificación: {CUI}"),
+    merge("Nacionalidad: {NACIONALIDAD}"),
+    merge("Estado civil: {ESTADOCIVIL}"),
+    merge("Profesión u oficio: {LABORAL}"),
+    merge("Escolaridad: {ESCOLARIDAD}"),
+    merge("Religión: {RELIGION}"),
+    merge("Pueblo: {Pueblo} — {COMUNIDAD}"),
+    merge("Idiomas que habla: {IDIOMAPREFERIDO}"),
+    "",
+    "OBJETIVO Y METODOLOGÍA",
+    merge("Se emite el presente informe psicológico con objetivo de atención, a efecto de informar sobre la atención psicológica, para el cual se solicitó el consentimiento informado por parte de {Consentimiento}, CUI: {CONSENTIMIENTOCUI}, quien autoriza la atención y elaboración de informe."),
+    "El informe se realizó a través de una entrevista semiestructurada y la observación clínica, misma que tuvo una duración de 60 minutos, considerando además el tiempo para la realización del presente informe. Asimismo se brindó atención primaria y orientación psicológica relacionada al caso.",
+    merge("{FRASEIDIOMA}"),
+    "",
+    "HECHOS REFERIDOS",
+    merge("Se realizó la entrevista y la atención psicológica en {LUGARDEATENCION}, basado en los hechos referidos de la declaración testimonial, donde {NOMBREDELAVICTIMA} refiere lo siguiente:"),
+    narr.hechos || "",
+    "",
+    "OBSERVACIÓN CLÍNICA",
+    "Aspecto físico: " + (narr.obs_fisico || ""),
+    "Capacidades mentales: " + (narr.obs_mental || ""),
+    "Conductual: " + (narr.obs_conducta || ""),
+    "Emociones prevalentes: " + (narr.obs_emocion || ""),
+    "Impresión de su situación psicológica: " + (narr.obs_impresion || ""),
+    "",
+    "ANÁLISIS Y CONCLUSIONES",
+    "Valoración de la dinámica de victimización: " + (narr.dinamica || ""),
+    "",
+    merge("Afectación psicológica y permanencia de la afectación:"),
+    merge("Durante la entrevista con {NOMBREDELAVICTIMA} se determina lo siguiente:"),
+    narr.afectacion || "",
+    "",
+    "Afectación al proyecto de vida o deterioro psicosocial: " + (narr.proyecto || ""),
+    "",
+    "Valoración de la vulnerabilidad y riesgo: " + (narr.riesgo || ""),
+    "",
+    "RECOMENDACIONES",
+    narr.recomendaciones || "",
+    "",
+    "BIBLIOGRAFÍA",
+    narr.bibliografia || "",
+    "",
+    "____________________________________",
+    merge("{Psicologo}"),
+    "Psicólogo II   Colegiado: 11775",
+    "Oficina de Atención a la Víctima",
+    "Fiscalía Distrital de Totonicapán",
+    "Ministerio Público",
+  ].join("\n");
+}
+function docConsentAtencion() {
+  return [
+    "CONSENTIMIENTO INFORMADO DE ATENCIÓN DE ADULTO", "",
+    "De conformidad a los derechos que le asisten a la víctima, se informa que es necesario contar con su consentimiento con la finalidad de brindar la atención primaria.", "",
+    merge("Yo, {NOMBREDELAVICTIMA}, quien me identifico con el Documento Personal de Identificación con Código Único de Identificación número {CUI}, {ATENCION} AUTORIZO al profesional de la Fiscalía Distrital de Totonicapán a proceder con las intervenciones primarias de atención victimológica."), "",
+    merge("Totonicapán, Totonicapán, {Fecha}"), "",
+    "________________________________________________",
+    "Firma de la víctima",
+    merge("{NOMBREDELAVICTIMA}"),
+    merge("{CUI}"), "",
+    "_____________________________________________",
+    merge("{Psicologo} (firma y sello)"),
+    "Fiscalía Distrital de Totonicapán",
+  ].join("\n");
+}
+function docConsentInforme() {
+  return [
+    "CONSENTIMIENTO DE ELABORACIÓN DE INFORME DE ADULTO", "",
+    "De conformidad a los derechos que le asisten a la víctima, se informa que es necesario contar con su consentimiento con la finalidad de brindar seguimiento de atención.", "",
+    merge("Yo, {NOMBREDELAVICTIMA}, quien me identifico con el Documento Personal de Identificación con Código Único de Identificación número {CUI}, {INFORME} AUTORIZO al profesional de la OAV de la Fiscalía Distrital de Totonicapán que realice las acciones relacionadas para la emisión del informe correspondiente a: INFORME PSICOLÓGICO CON OBJETIVO DE ATENCIÓN."), "",
+    "La información y explicación que me brindó el profesional de atención es clara, comprensible y por lo tanto estoy en la libre disposición de ejercer mis derechos y tomar mis propias decisiones.", "",
+    merge("Totonicapán, Totonicapán, {Fecha}"), "",
+    "________________________________________________",
+    "Firma de la víctima",
+    merge("{NOMBREDELAVICTIMA}"),
+    merge("{CUI}"), "",
+    "_____________________________________________",
+    merge("{Psicologo} (firma y sello)"),
+    "Fiscalía Distrital de Totonicapán",
+  ].join("\n");
+}
+function docNoDeriv() {
+  return [
+    "NO DERIVACIÓN",
+    merge("No. Boleta: {NUMERODEMP}"),
+    "Lugar: Fiscalía Distrital de Totonicapán",
+    merge("Fecha: {Fecha}"), "",
+    merge("Yo, {NOMBREDELAVICTIMA}, quien me identifico con documento personal de identificación DPI y número de CUI {CUI}, por este medio manifiesto que NO DESEO SER DERIVADO A OTRA ORGANIZACIÓN."), "",
+    "Las explicaciones que me dio el profesional de atención son claras y comprensibles, por lo tanto estoy en la posición de hacer mis elecciones libremente y tomar mi decisión.", "",
+    "F. ____________________________________________________________",
+    "Firma de la víctima directa o víctima colateral", "",
+    "Impresión digital: ________________________________________________",
+  ].join("\n");
+}
+function docAcciones() {
+  return [
+    "FISCALÍA DE DISTRITO DE TOTONICAPÁN",
+    "OFICINA DE ATENCIÓN A LA VÍCTIMA",
+    merge("{NUMERODEMP}"),
+    merge("{FECHADEREM}"),
+    merge("{NOMBREDELFISCAL}"),
+    "Auxiliar Fiscal I",
+    merge("{FISCALIA}"),
+    "MINISTERIO PÚBLICO", "",
+    "ACCIONES VICTIMOLÓGICAS",
+    "Se realiza entrega del presente oficio para informar sobre las acciones victimológicas realizadas durante el procedimiento de atención, según circular DCAV/SPC/G2025-000033/mahh y anexo.", "",
+    merge("Lugar de atención: {LUGARDEATENCION}"),
+    merge("Fecha: {Fecha}     Hora de atención: {Hora} hrs."),
+    merge("Víctima: {NOMBREDELAVICTIMA}"),
+    merge("Edad: {EDAD}"), "",
+    accText(),
+  ].join("\n");
+}
+const DOCS = [
+  ["Informe psicológico completo", docInforme],
+  ["Consentimiento de atención", docConsentAtencion],
+  ["Consentimiento de informe", docConsentInforme],
+  ["No derivación", docNoDeriv],
+  ["Oficio de acciones victimológicas", docAcciones],
+];
+function renderDocs() {
+  $("docs").innerHTML = DOCS.map((d, i) => {
+    const text = d[1]();
+    const html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/\[([A-Z_]+)\]/g, '<span class="ph">[$1]</span>');
+    return `
+      <div class="doc" data-di="${i}">
+        <div class="dh"><h3>${d[0]}</h3>
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="preview">
+          <div class="ptext">${html}</div>
+          <div class="dactions">
+            <button class="btn pri sm" data-copy="${i}">${ICON_COPY} Copiar todo</button>
+            <button class="btn line sm" data-print="${i}">Imprimir / PDF</button>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+  $("docs").querySelectorAll(".dh").forEach((h) => h.onclick = () => h.parentElement.classList.toggle("open"));
+  $("docs").querySelectorAll("[data-copy]").forEach((b) => b.onclick = (e) => {
+    e.stopPropagation(); const d = DOCS[+b.dataset.copy]; copy(d[1](), d[0]);
+  });
+  $("docs").querySelectorAll("[data-print]").forEach((b) => b.onclick = (e) => {
+    e.stopPropagation(); institutionalPrint(DOCS[+b.dataset.print][1]());
+  });
+}
+
+/* ===== institutional print ===== */
+const TITLES = new Set([
+  "FISCALÍA DE DISTRITO DE TOTONICAPÁN", "OFICINA DE ATENCIÓN A LA VÍCTIMA", "MINISTERIO PÚBLICO",
+  "INFORME PSICOLÓGICO CON OBJETIVO DE ATENCIÓN", "DATOS GENERALES", "OBJETIVO Y METODOLOGÍA",
+  "HECHOS REFERIDOS", "OBSERVACIÓN CLÍNICA", "ANÁLISIS Y CONCLUSIONES", "RECOMENDACIONES", "BIBLIOGRAFÍA",
+  "CONSENTIMIENTO INFORMADO DE ATENCIÓN DE ADULTO", "CONSENTIMIENTO DE ELABORACIÓN DE INFORME DE ADULTO",
+  "NO DERIVACIÓN", "ACCIONES VICTIMOLÓGICAS",
+]);
+function escapeHTML(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function institutionalPrint(text) {
+  const mp = v("NUMERODEMP"), rem = v("FECHADEREM");
+  const html = text.replace(/\[([A-Z_]+)\]/g, "______").split("\n").map((line) => {
+    const t = line.trim();
+    if (t === "") return '<div class="sp"></div>';
+    let cls = "al-left";
+    if (TITLES.has(t)) cls = "al-title";
+    else if ((mp && t === mp) || (rem && t === rem)) cls = "al-right";
+    return `<div class="ln ${cls}">${escapeHTML(line)}</div>`;
+  }).join("");
+  $("pBody").innerHTML = html;
+  window.print();
+}
+
+/* ===== .odt export (fills your real template, keeps its styles/logo) ===== */
+const APP2TPL = { RELIGION: "RELIGIÓN", DIRECCION: "DIRECCIÓN", Relacion: "Relación",
+  Relacionconelsindicado: "Relaciónconelsindicado", Psicologo: "Psicólogo", ATENCION: "ATENCIÓN" };
+const ODT_ANCHORS = {
+  hechos: "refiere lo siguiente:", obs_fisico: "Aspecto físico:", obs_mental: "Capacidades mentales:",
+  obs_conducta: "Conductual:", obs_emocion: "Emociones prevalentes:", obs_impresion: "Impresión de su situación psicológica:",
+  dinamica: "Valoración de la dinámica de victimización:", afectacion: "se determina lo siguiente:",
+  proyecto: "Afectación al proyecto de vida o deterioro psicosocial:", riesgo: "Valoración de la vulnerabilidad y riesgo:",
+  recomendaciones: "Recomendaciones:", bibliografia: "Bibliografía:",
+};
+const CRCT = (() => { const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[n] = c >>> 0; } return t; })();
+function crc32(buf) { let c = 0xFFFFFFFF; for (let i = 0; i < buf.length; i++) c = CRCT[(c ^ buf[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function buildZip(entries) {
+  const enc = new TextEncoder(), chunks = [], central = []; let offset = 0;
+  const u16 = (n) => { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, n, true); return b; };
+  const u32 = (n) => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n >>> 0, true); return b; };
+  for (const e of entries) {
+    const name = enc.encode(e.name), data = e.data, crc = crc32(data);
+    [u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0), name, data].forEach((p) => chunks.push(p));
+    central.push([u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset), name]);
+    offset += 30 + name.length + data.length;
+  }
+  const cdStart = offset; let cdSize = 0; const cdChunks = [];
+  central.forEach((cd) => cd.forEach((p) => { cdChunks.push(p); cdSize += p.length; }));
+  const eocd = [u32(0x06054b50), u16(0), u16(0), u16(central.length), u16(central.length), u32(cdSize), u32(cdStart), u16(0)];
+  const all = [...chunks, ...cdChunks, ...eocd];
+  let len = 0; all.forEach((p) => len += p.length);
+  const out = new Uint8Array(len); let o = 0; all.forEach((p) => { out.set(p, o); o += p.length; });
+  return out;
+}
+function xescA(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function xescT(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function fillField(xml, name, val) {
+  const va = xescA(val), vt = xescT(val), ne = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  xml = xml.replace(new RegExp('(office:string-value=")[^"]*("[^>]*text:name="' + ne + '")', "g"), (m, a, b) => a + va + b);
+  xml = xml.replace(new RegExp('(<text:user-field-get text:name="' + ne + '">)[^<]*(</text:user-field-get>)', "g"), (m, a, b) => a + vt + b);
+  return xml;
+}
+function injectAfter(xml, anchor, text) {
+  if (!text || !text.trim()) return xml;
+  const idx = xml.lastIndexOf(anchor); if (idx === -1) return xml;
+  const m = /<\/text:[hp]>/.exec(xml.slice(idx)); if (!m) return xml;
+  const pos = idx + m.index + m[0].length;
+  const paras = text.split("\n").map((l) => "<text:p>" + xescT(l) + "</text:p>").join("");
+  return xml.slice(0, pos) + paras + xml.slice(pos);
+}
+async function downloadOdt() {
+  toast("Generando .odt…");
+  try {
+    const base = "template/";
+    let content = await (await fetch(base + "content.xml")).text();
+    for (const g of GROUPS) for (const f of g.fields) {
+      const k = f[0]; if (k === "FRASEIDIOMA") continue;
+      content = fillField(content, APP2TPL[k] || k, v(k) || "");
+    }
+    for (const n of NARR) content = injectAfter(content, ODT_ANCHORS[n[0]], narr[n[0]] || "");
+    const enc = new TextEncoder();
+    const bin = async (p) => new Uint8Array(await (await fetch(base + p)).arrayBuffer());
+    const entries = [
+      { name: "mimetype", data: await bin("mimetype") },
+      { name: "content.xml", data: enc.encode(content) },
+      { name: "styles.xml", data: await bin("styles.xml") },
+      { name: "settings.xml", data: await bin("settings.xml") },
+      { name: "meta.xml", data: await bin("meta.xml") },
+      { name: "manifest.rdf", data: await bin("manifest.rdf") },
+      { name: "META-INF/manifest.xml", data: await bin("META-INF/manifest.xml") },
+      { name: "Thumbnails/thumbnail.png", data: await bin("thumbnail.png") },
+      { name: "Pictures/10000000000008000000005A7D85DF8C.jpg", data: await bin("Pictures/10000000000008000000005A7D85DF8C.jpg") },
+      { name: "Pictures/10000001000006AD000005D03E0EE38F.png", data: await bin("Pictures/10000001000006AD000005D03E0EE38F.png") },
+    ];
+    const zip = buildZip(entries);
+    const nom = (v("NOMBREDELAVICTIMA") || "informe").replace(/[^\w\sÁÉÍÓÚÑáéíóúñ-]/g, "").trim().replace(/\s+/g, "_") || "informe";
+    const blob = new Blob([zip], { type: "application/vnd.oasis.opendocument.text" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `Informe_${nom}.odt`; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast(".odt descargado");
+  } catch (e) {
+    toast("El .odt requiere la app publicada en línea (GitHub Pages).");
+  }
+}
+
+/* ===== tabs ===== */
+$("tabs").querySelectorAll(".tab").forEach((t) => t.onclick = () => {
+  $("tabs").querySelectorAll(".tab").forEach((x) => x.classList.remove("on"));
+  document.querySelectorAll(".view").forEach((v) => v.classList.remove("on"));
+  t.classList.add("on"); $("v-" + t.dataset.v).classList.add("on");
+  if (t.dataset.v === "documentos") renderDocs();
+  window.scrollTo({ top: 0 });
+});
+
+/* ===== drafts (IndexedDB) ===== */
+const DB = "informesDB", STORE = "drafts";
+function openDB() { return new Promise((res, rej) => {
+  const r = indexedDB.open(DB, 1);
+  r.onupgradeneeded = (e) => { const db = e.target.result; if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "id" }); };
+  r.onsuccess = (e) => res(e.target.result); r.onerror = (e) => rej(e.target.error);
+});}
+async function dbAll() { const db = await openDB(); return new Promise((res, rej) => { const q = db.transaction(STORE).objectStore(STORE).getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => rej(q.error); }); }
+async function dbPut(o) { const db = await openDB(); return new Promise((res, rej) => { const t = db.transaction(STORE, "readwrite"); t.objectStore(STORE).put(o); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
+async function dbDel(id) { const db = await openDB(); return new Promise((res, rej) => { const t = db.transaction(STORE, "readwrite"); t.objectStore(STORE).delete(id); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
+
+async function saveDraft() {
+  if (!currentId) currentId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+  const rec = { id: currentId, vals, narr, accSel, victima: v("NOMBREDELAVICTIMA"), mp: v("NUMERODEMP"), updatedAt: new Date().toISOString() };
+  await dbPut(rec);
+  toast("Borrador guardado");
+}
+async function openDrafts() {
+  const list = await dbAll();
+  list.sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+  const el = $("draftList");
+  if (!list.length) { el.innerHTML = '<div class="emptyd">No hay borradores guardados todavía.</div>'; }
+  else el.innerHTML = list.map((d) => `
+    <div class="draft" data-id="${d.id}">
+      <div class="di">
+        <div class="dt">${(d.victima || "Sin nombre").replace(/</g,"&lt;")}</div>
+        <div class="dm">${(d.mp || "sin MP")} · ${fmt(d.updatedAt)}</div>
+      </div>
+      <button class="load" data-load="${d.id}">Abrir</button>
+      <button data-del="${d.id}" title="Eliminar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
+    </div>`).join("");
+  el.querySelectorAll("[data-load]").forEach((b) => b.onclick = async () => {
+    const rec = (await dbAll()).find((x) => x.id === b.dataset.load);
+    if (rec) { vals = rec.vals || {}; narr = rec.narr || {}; accSel = rec.accSel || {}; currentId = rec.id;
+      renderAll(); $("draftsModal").classList.remove("on"); toast("Borrador cargado"); }
+  });
+  el.querySelectorAll("[data-del]").forEach((b) => b.onclick = async () => {
+    if (!confirm("¿Eliminar este borrador?")) return;
+    await dbDel(b.dataset.del); openDrafts();
+  });
+  $("draftsModal").classList.add("on");
+}
+function fmt(iso) { try { return new Date(iso).toLocaleString("es-GT"); } catch { return ""; } }
+
+/* ===== new / render all ===== */
+function renderAll() { renderGroups(); renderNarr(); renderAcc(); }
+$("newBtn").onclick = () => {
+  if (!confirm("¿Empezar un informe nuevo? Se limpiará el formulario (guarda antes si lo necesitas).")) return;
+  defaults(); currentId = null; renderAll(); toast("Formulario nuevo");
+};
+$("saveBtn").onclick = saveDraft;
+$("draftsBtn").onclick = openDrafts;
+$("closeDrafts").onclick = () => $("draftsModal").classList.remove("on");
+$("draftsModal").onclick = (e) => { if (e.target.id === "draftsModal") $("draftsModal").classList.remove("on"); };
+$("copyAcc").onclick = () => copy(accText(), "Acciones victimológicas");
+$("odtBtn").onclick = downloadOdt;
+
+if ("serviceWorker" in navigator)
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+
+defaults();
+renderAll();
+</script>
+</body>
+</html>
